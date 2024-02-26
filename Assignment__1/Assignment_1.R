@@ -1,0 +1,1 @@
+data <- read_csv("Ass1/EV.csv")
