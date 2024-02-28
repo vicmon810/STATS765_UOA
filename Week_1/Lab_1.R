@@ -8,6 +8,8 @@ library(tidyverse)
 seed <- 765 # <Replace '765' with your student ID here.>
 set.seed(seed)
 
+print("hell")
+
 # generate alarm id, dates and region vectors
 alarms_id.vt <- paste0('alarms_', sample(LETTERS, size = 10, replace = FALSE))
 alarms_dates.vt <- paste0('d.',seq(Sys.Date()-60, Sys.Date(), by = '1 day'))  # 60 days back.
