@@ -1,0 +1,34 @@
+---
+title: "Week1_report"
+output: html_document
+date: "2024-03-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+task2 <-read.csv('task2.csv')
+task3 <-read.csv('task3.csv')
+
+```
+
+# Task 2 : 
+In task 2 we are asked to get the average number of alarms in each region, in the plot below is on date 3/1/2024 each region alarms rings time
+```{r}
+data <- task2[1:5,]
+# Plotting average_count against alarms_region
+# Create a bar plot
+barplot(data[,6], names.arg = data[,5], 
+        xlab = "Alarms Region", ylab = "Average Count", 
+        main = "Average Count by Alarms Region on date 2024/1/3")
+```
+
+# Task 3
+In task 3, the task is to find out lowest alarm time on each week of  and highest alarm time. 
+```{r}
+
+task3 <- task3[order(task3[,3]), ]
+print(task3)
+```
