@@ -1,5 +1,5 @@
 #install tidyverse
-install.packages("tidyverse")
+#install.packages("tidyverse")
 
 # load library
 library(tidyverse)
@@ -8,7 +8,8 @@ library(tidyverse)
 seed <- 765 # <Replace '765' with your student ID here.>
 set.seed(seed)
 
-
+ 
+ 
 
 # generate alarm id, dates and region vectors
 alarms_id.vt <- paste0('alarms_', sample(LETTERS, size = 10, replace = FALSE)) # nolint # nolint
