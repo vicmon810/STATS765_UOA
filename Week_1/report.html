@@ -361,8 +361,8 @@ task3 &lt;-read.csv(&#39;task3.csv&#39;)</code></pre>
 <h1>Task 2 :</h1>
 <p>In task 2 we are asked to get the average number of alarms in each
 region, in the plot below is on date 3/1/2024 each region alarms rings
-time</p>
-<pre class="r"><code>data &lt;- task2[1:5,]
+time.</p>
+<pre class="r"><code>data &lt;- task2[1:5,] # select the first 5 rows, which in same day
 # Plotting average_count against alarms_region
 # Create a bar plot
 barplot(data[,6], names.arg = data[,5], 
@@ -374,16 +374,20 @@ barplot(data[,6], names.arg = data[,5],
 <h1>Task 3</h1>
 <p>In task 3, the task is to find out lowest alarm time on each week of
 and highest alarm time.</p>
-<pre class="r"><code>task3 &lt;- task3[order(task3[,3]), ]
-print(task3)</code></pre>
-<pre><code>##   X week_day average_alarm
-## 7 7      Sun      378.1667
-## 6 6      Thu      379.2333
-## 5 5      Fri      379.9444
-## 4 4      Wed      386.5222
-## 3 3      Mon      388.1625
-## 2 2      Sat      388.1889
-## 1 1      Tue      388.4125</code></pre>
+<pre class="r"><code>task3 &lt;- task3[order(task3[,3]), ] 
+print(task3[,2])</code></pre>
+<pre><code>## [1] &quot;Sun&quot; &quot;Thu&quot; &quot;Fri&quot; &quot;Wed&quot; &quot;Mon&quot; &quot;Sat&quot; &quot;Tue&quot;</code></pre>
+</div>
+<div id="task-4" class="section level1">
+<h1>Task 4</h1>
+<p>Working with the {tidyverse} package for data wrangling tasks has
+been an enlightening experience. It contains many useful package such as
+{ggplot2} to help data scientist visualizing data. In this week lab work
+main part is focus on filter and summarizing data using basic
+{tidyverse} functions. In addition the integration of the pipe operator
+(%&gt;%) can make R script more easy to write. Overall, {tidyverse} has
+greatly streamlined my data analysis workflow, and I look forward to
+utilizing its capabilities further in future projects.</p>
 </div>
 
 

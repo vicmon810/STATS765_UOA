@@ -1,6 +1,8 @@
 ---
 title: "Week1_report"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 date: "2024-03-03"
 ---
 
@@ -15,9 +17,11 @@ task3 <-read.csv('task3.csv')
 ```
 
 # Task 2 : 
-In task 2 we are asked to get the average number of alarms in each region, in the plot below is on date 3/1/2024 each region alarms rings time
+In task 2 we are asked to get the average number of alarms in each region, in the plot below is on date 3/1/2024 each region alarms rings time.
+
+
 ```{r}
-data <- task2[1:5,]
+data <- task2[1:5,] # select the first 5 rows, which in same day
 # Plotting average_count against alarms_region
 # Create a bar plot
 barplot(data[,6], names.arg = data[,5], 
@@ -28,7 +32,12 @@ barplot(data[,6], names.arg = data[,5],
 # Task 3
 In task 3, the task is to find out lowest alarm time on each week of  and highest alarm time. 
 ```{r}
-
-task3 <- task3[order(task3[,3]), ]
-print(task3)
+task3 <- task3[order(task3[,3]), ] 
+print(task3[,2])
 ```
+
+# Task 4 
+
+Working with the {tidyverse} package for data wrangling tasks has been an enlightening experience. It contains many useful package such as {ggplot2} to help data scientist visualizing data. In this week lab work main part is focus on filter and summarizing data using basic {tidyverse} functions. In addition the integration of the pipe operator (%>%) can make R script more easy to write. Overall, {tidyverse} has greatly streamlined my data analysis workflow, and I look forward to utilizing its capabilities further in future projects.
+
+
