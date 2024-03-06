@@ -1,5 +1,3 @@
-/Assignment_1
-.vscode 
-.RData
-.RHistory
-
+*
+!Assignment_1
+.Rproj.user
