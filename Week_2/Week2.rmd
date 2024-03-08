@@ -1,0 +1,166 @@
+---
+title: "Week2"
+output:
+  html_document: default
+  pdf_document: default
+date: "2024-03-08"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Task 1: 
+## The data is obviously not pre-processed – can you spot the problems?
+Yes, there is a few questions in that data set: 
+1.The dataset contains merged cells, which makes it easy for 
+humans to read but difficult for machines to process efficiently.
+2. Additionally, there are missing data points in the Excel file.
+
+## How would you address the challenges identified above? Briefly summarise your thoughts.
+First, I will create an additional column named 'description,'
+ which will contain a brief description of each status. Then, 
+ I will utilize the 'pivot_longer' method to transform 
+ each column along with its corresponding rows.
+
+ # Task 2: Clean the data
+
+```{r, message = FALSE}
+# import libs
+library(readxl) 
+library(zoo)
+library(purrr)
+library(tidyverse)
+
+# loading data 
+raw.df <- read_excel("/Users/vicmon/stat765/STATS765_UOA/Week_2/simulation_outpu1_raw.xlsx", col_name = FALSE) #full path comment when submiting 
+# raw.df <- read_excel"Week_2/simulation_outpu1_raw.xlsx", col_name = FALSE)
+
+
+# Create column names 
+header_names <- expand.grid(x = c('small', 'medium', 'large'),
+                            y = c('offices'),
+                            z = c('concrete', 'curtainWall')) %>% 
+  mutate(nn = paste(x, y, z, sep='_')) %>% 
+  pull(nn)  
+
+
+names(raw.df) <- c('weather', 'description', header_names)
+
+
+## dealing with merged cells, create 'group' e.g. overall, sensible cooling etc
+x1 <- as.data.frame(matrix(rep(NA, length(raw.df)), nrow = 1))
+names(x1) <- names(raw.df)
+df2 <- bind_rows(x1, raw.df) %>% 
+  mutate(group = ifelse(is.na(description), 'overall',
+                        ifelse(description=='Sensible Cooling', 'sensible_cooling',
+                               ifelse(description=='Sensible Heating', 'sensible_heating', NA)))) %>% 
+  fill(group, .direction = 'down') %>% 
+  fill(weather, .direction = 'down') %>% 
+  filter(!(description %in%c(NA, 'Sensible Cooling',
+                             'Sensible Heating'))) %>% 
+  pivot_longer(cols = small_offices_concrete:large_offices_curtainWall,
+               names_to = 'CATEGORY',
+               values_to = 'value') %>% 
+  separate(CATEGORY, c('office_size', 'office', 'office_type'),
+           sep='_') %>% 
+  select(-office)
+
+glimpse(raw.df)
+summary(raw.df)
+```
+
+# task 3: Exploration using {ggplot2}
+
+## filtering with Cooling condition
+```{r, message = FALSE}
+# cooling condition 
+cool <- df2 %>% filter(group %in% c("sensible_cooling" ))
+```
+
+## plotting Calculated Design Air Flow
+
+```{r, message = FALSE}
+# plotting Calculated Design Air Flow by weather condition
+desc_air_flow <- cool %>%  filter(description %in% c("Calculated Design Air Flow [m3/s]"))
+desc_air_flow%>%
+  filter(office_size %in% c("small", "medium","large") )%>% 
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+
+```
+
+## plotting user design air Flow
+```{r, message = FALSE}
+desc_peak <- cool %>% filter( description %in% c("User Design Air Flow [m3/s]")) #%>%  filter(weather %in% c("Very Hot Humid (Honolulu, HI)")) 
+
+desc_peak %>%
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+```
+
+
+
+## plotting Thermostat Setpoint Temperature at Peak Load by weather condition
+```{r}
+desc_temp <- cool %>% filter(description %in% c("Thermostat Setpoint Temperature at Peak Load [C]"))
+desc_temp %>%
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+```
+
+## plotting Outdoor Temperature at Peak Load by weather condition
+```{r, message = FALSE} 
+desc_out_door <- cool %>%  filter(description %in% c("Outdoor Temperature at Peak Load [C]"))
+desc_out_door %>%     ggplot(aes(y = weather, x = value, color = interaction(office_size, office_type))) +
+  geom_jitter()
+
+```
+
+## plotting Outdoor Humidity Ratio at Peak Load by weather condition
+``` {r, message = FALSE} 
+desc_hum_rat <- cool %>%  filter((description %in% c("Outdoor Humidity Ratio at Peak Load [kgWater/kgAir]")))
+desc_hum_rat  %>%   ggplot(aes(y = weather, x = value, color =  interaction(office_size, office_type))) +
+  geom_jitter()
+```
+
+# Plotting heating condition(most of just repeat from above only changes the cooling to heating) 
+```{r, message = FALSE}
+heat <- df2 %>%  filter(group %in% c("sensible_heating"))
+```
+```{r, message = FALSE}
+# plotting Calculated Design Air Flow
+heat_air_flow <- heat %>%  filter(description %in% c("Calculated Design Air Flow [m3/s]")) %>%
+  filter(office_size %in% c("small", "medium","large") )%>% 
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+```
+```{r, message = FALSE}
+# plotting User Design Air Flow 
+heat_peak <- heat %>% filter( description %in% c("User Design Air Flow [m3/s]")) #%>%  filter(weather %in% c("Very Hot Humid (Honolulu, HI)")) 
+
+heat_peak %>%
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+```
+
+
+```{r, message = FALSE}
+# listing Thermostat Setpoint Temperature at Peak Load by weather condition
+heat_temp <- heat %>% filter(description %in% c("Thermostat Setpoint Temperature at Peak Load [C]"))
+heat_temp %>%
+  ggplot(aes(y = weather, x = value, color= interaction(office_size, office_type))) +
+  geom_jitter()
+# listing Outdoor Temperature at Peak Load by weather condition
+heat_out_door <- heat %>%  filter(description %in% c("Outdoor Temperature at Peak Load [C]"))
+heat_out_door %>%     ggplot(aes(y = weather, x = value, color = interaction(office_size, office_type))) +
+  geom_jitter()
+```
+```{r, message = FALSE}
+# plotting Outdoor Humidity Ratio at Peak Load by weather condition
+heat_hum_rat <- heat %>%  filter((description %in% c("Outdoor Humidity Ratio at Peak Load [kgWater/kgAir]")))
+heat_hum_rat  %>%   ggplot(aes(y = weather, x = value, color =  interaction(office_size, office_type))) +
+  geom_jitter()
+
+```
+
+
