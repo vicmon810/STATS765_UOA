@@ -1,5 +1,3 @@
-/Assignment_1
-.vscode 
-.RData
-.RHistory
-
+* 
+!/Week_1/**
+/Week_1/*.html

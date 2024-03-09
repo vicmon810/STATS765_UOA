@@ -50,6 +50,6 @@ alarms_task3.df <- alarms_count.df  %>%  pivot_longer(cols = !alarm_id, names_to
 
 write.csv(alarms_insight.df, 'task2.csv' )
 write.csv(alarms_task3.df,  "task3.csv" )
-#setwd("Week_1")
+#setwd("Week_1")1
 #task2 <-read.csv('task2.csv')
 #head(task2)
