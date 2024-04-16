@@ -1,0 +1,42 @@
+---
+title: "Week 5"
+output:
+  html_document: default
+  pdf_document: default
+date: "2024-03-03"
+---
+
+
+
+# Task 1
+
+```{r}
+# load libraries
+library(glmnet)
+library(MASS)
+library(tidyverse)
+# set up parameters
+set.seed(123) 
+n <- 80  
+p <- 80  
+lambdas <- 2^ seq(6, -4, length = 100)  # lambda values.
+# set up correlation matrix between Xs.
+cor.mat <- matrix(0.7, nrow = p, ncol = p)
+diag(cor.mat) <- 1
+cor.mat[lower.tri(cor.mat)] <- t(cor.mat)[lower.tri(cor.mat)]
+# dat_A
+X1 <- mvrnorm(n, mu=rep(1, p), Sigma = cor.mat)
+colnames(X1) <- paste0('X', str_pad(1:p, nchar(p), 'left', '0'))
+n_betas <- 5
+betas <- as.vector(scale(sample(1:n_betas))) * 10
+related.ind <- sample(1:p, n_betas)
+y1 <- as.numeric(betas %*% t(X1[,related.ind]) + rnorm(n))
+dat_A <- cbind(data.frame(Y = y1), X1)
+# dat_B
+X2 <- mvrnorm(n, mu=rep(1, p), Sigma = cor.mat)
+colnames(X2) <- paste0('X', str_pad(1:p, nchar(p), 'left', '0'))
+all_betas <- sample(as.vector(scale(1:p))) * 0.1
+y2 <- as.numeric(all_betas %*% t(X2) + rnorm(n))
+dat_B <- cbind(data.frame(Y = y2), X2)
+
+```

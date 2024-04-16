@@ -1,0 +1,4 @@
+"0","    fitted <- matrix(nrow = n, ncol - length(lambdas))
+"
+"2","Error in ncol - length(lambdas) : non-numeric argument to binary operator
+"
