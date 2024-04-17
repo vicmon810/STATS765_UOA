@@ -1,0 +1,39 @@
+---
+title: "Milestone 1: Analysis rental hosing on market in New Zealand/Aotearoa"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Objective
+
+The ojective of my project is to analysis the rental market trends in New zealand/Aotearoa in pass 30 years(1993 - 2023).
+
+### Data
+The rental market in Aotearoa will be the main subject of my data research endeavor. My primary source of data will be [tenancy services](https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/), which I will complement with publically available datasets. The collection includes time stamps, mean and median rental costs come with some simple static analysis, and information on  different areas. It also includes several kinds of bonds:
+  - "Lodged_bonds" are security deposits that management agents or landlords keep on hand to protect themselves against possible losses or unpaid rent while a tenant is in place.
+  - "Active_bonds" represent security deposits that are being used to hold down rental properties, indicating that the home is rented out right now.
+  - "Closed_bonds" are security deposits that, after the conclusion of a tenancy, have either been repaid or are no longer in force.
+
+### Exploratory Ideas
+
+1.  Trend analysis of rental prices across regions over time:
+    -   Examine the trends in Aotearoa's mean and median renal prices throughout time.
+    -   Plot time series graphs to see rental pricing trends and pinpoint areas that have seen notable shifts.
+2.  Analysis of rental price variability and affordability
+    -   Determine each region's top and lower quarterly rent and look at their distribution.
+    -   Assess whether areas have a significant degree of volatility in rental prices or affordability issues, and what factors may be causing these patterns.
+3. Relationship between the dynamics of the rental market and various bond types:
+    - Examine how the number of active bonds correlates with ental demand. 
+
+## Approach
+To begin my analysis of New Zealand's rental market, I first need to gather a sufficient amount of data from [tenancy services](https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/), that I am able to extract a dataset with potentially useful information after wrangling and cleaning, and put it in an understandable way for anyone to easily access.With this clean format dataset now I can convert this dataset from a human-friendly format to a machine-friendly database. After gain clean format data I am able to calculate trend of bonds and renal price in same region over time and compare it with another. 
+
+### Challenges
+- Accurately comprehending the significance of various bond kinds and their consequences on the dynamics of the rental market may be challenging.
+- Another challenge is Considering confounding variables and causative processes is necessary for interpreting the causal relationship between rental price, bond status, and other factors.
+

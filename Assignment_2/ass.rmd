@@ -1,0 +1,174 @@
+---
+title: "Milestone 2: Analysis of Rental Housing Market Trends in New Zealand/Aotearoa"
+author: "Shuo Mao 437681258"
+date: "2024-03-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(reader)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(janitor)
+```
+
+### Goal 
+The objective of this project is to analysis the trends in rental housing market in New Zealand/Aotearoa over the pass 30 years, focusing on rental cost changes and housing afforability. 
+### Data Source 
+The data for this analysis is primarily privode from Tenancy Services[https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/] by public database to provide a comprehensive overview of the market trends. 
+
+```{r, echo=TRUE}
+
+# Load the data
+rental.df <- read_csv("/Users/vicmon/Downloads/detailed-monthly-february-2024-tla-tenancy.csv", show_col_types = FALSE)
+#summary of rental.df
+summary(rental.df)
+```
+
+### Data Processing 
+At this stage, we only interest with rental price trend in different regions over time and the relation between bonds and rental price, hence we can remove some of unrelated attributes. In addition, we will using median value to replace any missing value in the median_rent column to handling missing valuables. 
+
+```{r}
+#tidy up column names
+rental.df <- janitor::clean_names(rental.df)
+# Columns that relate to our analysis
+relevant_columns <- c("location", "median_rent", "active_bonds", "time_frame", "closed_bonds")  
+clean.df <- rental.df %>% select(all_of(relevant_columns))%>%mutate(median_rent=replace_na(median_rent,median(median_rent, na.rm = TRUE)))  
+length(names(clean.df))
+# summary processing data
+summary(clean.df)
+
+```
+
+
+### Data exploration
+
+In this section, we will look at the rental market trend in Auckland region in pass 30 years. the general trend of north island, south island and entire New Zealand will in the Appendices sections.
+
+##### Trend analysis of rental prices in AUCKLAND region
+```{r}
+auckland <- clean.df %>% filter(location == 'Auckland')
+# time series plot of rental price 
+ggplot(auckland, aes(x = time_frame, y = median_rent, group = location)) +
+  geom_line() 
+```
+
+
+
+The graph above depicts the trends in Auckland's rental market over the last thirty years. It indicates a gradual increase in rental costs over decades, with a noticeable acceleration beginning in 2010. This increase of price rise reflects substantial market shifts in recent years.
+
+##### rental price variability of AUCKLAND region
+```{r}
+#Boxplot  
+ggplot(auckland , aes(x=location, y = median_rent))+
+  geom_boxplot()
+
+```
+
+
+
+The box plot shows the dispersion of median rental prices over the previous 30 years, with a median price of around $350. The first quartile is approximately $280, implying that 25% of prices are below this number, whilst the third quartile is around $500, implying that 75% of costs are below this higher barrier.
+
+
+##### relation between BOND type and rental market of AUCKLAND region
+```{r}
+ggplot(auckland, aes(x=active_bonds, y=median_rent))+
+  geom_point()
+
+ggplot(auckland, aes(x=closed_bonds, y=median_rent))+
+  geom_point()
+
+```
+
+
+The two charts above show a higher association between rental prices and active bonds than with closed bonds. This suggests that active bonds, which represent ongoing tenancies, are more representative of current market circumstances and have a bigger impact on rental pricing dynamics.
+
+
+##### Analytical plan 
+The goal of this project is too analysis the trend in the rental housing market in New Zealand in past 30 years, with a particular focus on changes in rental costs and housing affordability.
+
+The primary analysis proposed are: 
+
+- Time series analysis: This approach is appropriate for the data because to its temporal nature. By examining rental prices as a time series, we may find seasonal patterns, long-term trends, and possibly cyclical fluctuations. Models such as ARIMA can assist estimate future rental price changes based on previous data.
+
+- Regression analysis: To determine the influence of various factors on rental pricing, regression models will be used. This method will allow us to measure the impact of factors like the number of active and closed bonds, district-specific economic conditions, and other important variables on median rental pricing.
+
+- Geospatial analysis: Given the geographic heterogeneity in rental pricing, geospatial analysis will be employed to illustrate and analyse regional price patterns. This strategy will assist identify locations with quick price spikes or declines, as well as analyzing regional inequalities in housing affordability
+
+Additional attributes for modeling can be consider as 'Housing quality', 'general Economics', and 'Government policy impact.
+
+
+
+
+
+# appendix 
+
+## Rental price trend over North Island 
+```{r}
+north_island <- c("Auckland", "Far North District", "Whangarei District", "Hamilton City",
+                  "Tauranga City", "Rotorua District", "Taupo District", "Napier City",
+                  "Palmerston North City", "Wellington City", "New Plymouth District",
+                  "Whanganui District", "Gisborne District", "Porirua City", "Upper Hutt City",
+                  "Lower Hutt City", "Kapiti Coast District", "Masterton District",
+                  "South Wairarapa District", "Tararua District", "Horowhenua District",
+                  "Manawatu District", "Waikato District", "Hauraki District", "Thames-Coromandel District",
+                  "Matamata-Piako District", "Waipa District", "South Waikato District",
+                  "Waitomo District", "Opotiki District", "Western Bay of Plenty District",
+                  "Whakatane District", "Kawerau District", "Wairoa District", "Hastings District",
+                  "Central Hawke's Bay District", "Stratford District", "South Taranaki District",
+                  "Ruapehu District", "Rangitikei District", "Carterton District",
+                  "Otorohanga District")
+
+north <- clean.df %>%  filter(location %in% north_island)
+ggplot(north, aes(x = time_frame, y = median_rent, group = location)) +
+  geom_line() 
+
+ggplot(north , aes(x=location, y = median_rent))+
+  geom_boxplot(width=0.75)+theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+
+
+## Rental price trend over South  Island 
+```{r}
+south_island <- c("Christchurch City", "Queenstown-Lakes District", "Dunedin City",
+                  "Invercargill City", "Nelson City", "Marlborough District", "Tasman District",
+                  "Westland District", "Grey District", "Selwyn District", "Waimakariri District",
+                  "Timaru District", "Mackenzie District", "Waitaki District", "Central Otago District",
+                  "Ashburton District", "Southland District", "Gore District", "Hurunui District",
+                  "Kaikoura District", "Buller District", "Waimate District")
+
+south <- clean.df %>%  filter(location %in% south_island)
+ggplot(south, aes(x = time_frame, y = median_rent, group = location)) +
+  geom_line() 
+
+ggplot(south , aes(x=location, y = median_rent))+
+  geom_boxplot(width=0.75)+theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

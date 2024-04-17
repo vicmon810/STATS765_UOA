@@ -1,0 +1,155 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Assignment\_1},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Assignment\_1}
+\author{}
+\date{\vspace{-2.5em}2024-03-12}
+
+\begin{document}
+\maketitle
+
+\section{Milestone 1: Analysis rental hosing on market in New
+Zealand/Aotearoa}\label{milestone-1-analysis-rental-hosing-on-market-in-new-zealandaotearoa}
+
+\subsection{Objective}\label{objective}
+
+\subsubsection{The ojective of my project is to analysis the rental
+market trends in New zealand/Aotearoa in pass 30 years(1993 -
+2023)}\label{the-ojective-of-my-project-is-to-analysis-the-rental-market-trends-in-new-zealandaotearoa-in-pass-30-years1993---2023}
+
+\subsection{Data}\label{data}
+
+My data analysis project will focused on Aotearoa rental market, I will
+utilize data obtained from mainly
+\href{https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/}{tenancy
+servicer} collection and privoing open resource dataset. In the given
+dataset it records 66 regoin with time ,median rentail price, mean
+rentail price, and differenct kinds of bonds.
+
+By spcicify different kind of bonds are able to identitfy the rent hours
+move in status, lodged\_bonds can be idenitify as aecurity deposites
+held by landloards or managing agents to safeguard the potential damages
+or unpaied rent during a tenancy. active\_bond, refer Security deposite
+currently in use to secure rental properties which means the house is
+renting now. Cloes bond security deposits returned or no longer in
+effect following the end of a tenancy.
+
+In addition in the datset also given upper quartile rent which refers to
+the 75th percentile of rental price; lower quartile rent refers to the
+25th percentile of rental price; and logarithm of standard devation of
+weekly rent which refers to the logarithms of the standard devation of
+weekly rental price,
+
+\subsection{Exploratory Ideas}\label{exploratory-ideas}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Trend analysis of rental prices across regions over time:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    explore how median and mean tenal price changes over time across in
+    Aotearoa
+  \item
+    compare the distribution of rental prices in different regions
+  \end{itemize}
+\item
+  Analysis of rental price variability and affordability
+
+  \begin{itemize}
+  \tightlist
+  \item
+    calculate the upper and lower quarile rent for each regoin and
+    examine their distrbution
+  \item
+    Identify regions with high rental price variability or affordability
+    challenges and poential facotors contributing to these trends.
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Approach}\label{approach}
+
+To start with, I need to have enough data from NZ's rental market. After
+wrangling and tidying data set, I am able to extract potental useful
+dataset into a human friendly format. Next setp is to filter unneed data
+to make my spread sheet from human friendly format into machine friendly
+format which requires all the columns are atomic.
+
+\subsection{Challenges}\label{challenges}
+
+\begin{itemize}
+\tightlist
+\item
+  Use the NZ rental bond data to investigate if the law change in Feb
+  did lead to more rentals drop off the market resulting in less
+  rentals.
+\end{itemize}
+
+\end{document}
