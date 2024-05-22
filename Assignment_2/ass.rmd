@@ -13,6 +13,8 @@ library(lubridate)
 library(ggplot2)
 library(dplyr)
 library(janitor)
+library(ggplot2)
+library(forecast)
 ```
 
 ### Goal 
@@ -39,7 +41,6 @@ relevant_columns <- c("location", "median_rent", "active_bonds", "time_frame", "
 clean.df <- rental.df %>% select(all_of(relevant_columns))%>%mutate(median_rent=replace_na(median_rent,median(median_rent, na.rm = TRUE)))  
 length(names(clean.df))
 # summary processing data
-summary(clean.df)
 
 ```
 
@@ -93,6 +94,7 @@ The goal of this project is too analysis the trend in the rental housing market 
 The primary analysis proposed are: 
 
 - Time series analysis: This approach is appropriate for the data because to its temporal nature. By examining rental prices as a time series, we may find seasonal patterns, long-term trends, and possibly cyclical fluctuations. Models such as ARIMA can assist estimate future rental price changes based on previous data.
+
 
 - Regression analysis: To determine the influence of various factors on rental pricing, regression models will be used. This method will allow us to measure the impact of factors like the number of active and closed bonds, district-specific economic conditions, and other important variables on median rental pricing.
 

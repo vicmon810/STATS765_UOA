@@ -1,0 +1,488 @@
+---
+title: "Milestone 3"
+author: "Shuo Mao 437681258"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(reader)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(janitor)
+library(ggmap)
+library(leaflet)
+library(rnaturalearth)
+library(sf)          
+library(tmap)        
+library(spData)      
+library(geojsonio)  
+library(zoo)
+library(coefplot)
+income <- read_csv('/Users/vicmon/Downloads/median-weekly-earnings-from-wages-and-salaries-($),-by-sex,-june-quarters,-1998–2023.csv', show_col_types = FALSE)
+rental.df <- read_csv("/Users/vicmon/Downloads/detailed-monthly-february-2024-tla-tenancy.csv", show_col_types = FALSE)
+CPI <- read_csv('/Users/vicmon/Downloads/consumers-price-index-march-2024-quarter-index-numbers.csv', show_col_types = FALSE)
+```
+
+### Goal 
+The objective of this project is to analysis the trends in rental housing market in New Zealand/Aotearoa over the pass 30 years, focusing on rental cost changes and housing afforability. 
+### Data Scource
+The data for this analysis is primarily provided from Tenancy Services[https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/] by public database to provide a comprehensive overview of the market trends. 
+
+```{r}
+#tidy up column names Details will appear on Appendix 1.1 
+rental.df <- janitor::clean_names(rental.df)
+```
+
+
+### Data Processing 
+The first thing we need to do is to check our data frame for any missing values, by running following functions. 
+```{r}
+miss_count = colSums(is.na(rental.df))
+rows_with_missing <- which(!complete.cases(rental.df))
+missing_col <-rental.df[rows_with_missing, ]
+```
+From Appendix 2.1 there is missing value on columns location, so we need to find out does those missing value will effect our process or not. 
+After obverse the relation between rental price and time frame, we can consider it as a separate region
+
+At this stage, we interested  rental price trend in different regions over time and the relation between bonds and rental price, hence we can remove some of attributes that is not beneficial for us to analysis the relationship between bonds and rental price. For example duplicate data category, `Location_ID` and `Location`; also extra numbers such as `upper quartile rent` and `lower quartile rent`. Data detail will attend in appendix 2.2.
+
+```{r}
+# Columns that relate to our analysis
+relevant_columns <- c("location", "median_rent", "active_bonds", "time_frame", "closed_bonds","geometric_mean_rent")  
+clean.df <- rental.df %>%
+  select(all_of(relevant_columns))%>%
+  mutate(median_rent=replace_na(median_rent,median(median_rent, na.rm = TRUE)))  
+```
+### Data Explorations 
+In this section, we will look at the rental market trend in Auckland region in pass 30 years. the general trend of north island, south island and entire New Zealand will in the Appendices sections.
+##### Trend analysis of rental prices in AUCKLAND region
+```{r}
+auckland <- clean.df %>% filter(location == 'Auckland')
+# time series plot of rental price 
+ggplot(auckland, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')+
+      scale_color_manual(values = c('red','blue'),
+                         name = 'figure types',
+                         labels=c('Median', 'Geometric Mean'))
+```
+
+The graph above depicts the trends in Auckland's rental market over the last thirty years. It indicates a gradual increase in rental costs over decades, with a noticeable acceleration beginning in 2010. This increase of price rise reflects substantial market shifts in recent years.Furthermore, for additional insights into rental price trends across New Zealand, refer to Appendix 3.x. This section provides comprehensive data on rental prices for various regions, including the entire country (3.1), North Island (3.2), South Island (3.3), as well as specific cities such as Wellington (3.4), Christchurch (3.5), and Hamilton (3.6).
+
+##### rental price variability of AUCKLAND region
+```{r}
+#Boxplot  
+ggplot(auckland, aes(x = location)) + 
+  geom_boxplot(aes(y = median_rent, fill = "Median Rent"), alpha = 0.5) +
+  geom_boxplot(aes(y = geometric_mean_rent, fill = "Geometric Mean Rent"), alpha = 0.5) +
+  labs(title = "Boxplot of Rental Prices in Auckland",
+       x = "Location",
+       y = "Rent") +
+  scale_fill_manual(values = c("red", "blue"),
+                    name = "Rent Type",
+                    labels = c("Median Rent", "Geometric Mean Rent"))
+```
+
+
+
+The box plot shows the dispersion of median rental prices over the previous 30 years, with a median price of around $350. The first quartile is approximately $280, implying that 25% of prices are below this number, whilst the third quartile is around $500, implying that 75% of costs are below this higher barrier. For further insights into regional rental price distributions, refer to Appendix 3.7 for the North Island and Appendix 3.8 for the South Island, where additional box plots provide detailed visualizations of median rental prices.
+
+##### relation between BOND type and rental market of AUCKLAND region
+```{r}
+ggplot(auckland, aes(x = active_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Active Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+ggplot(auckland, aes(x = closed_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Closed Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+```
+
+The pair of charts presented above clearly depict a stronger correlation between rental prices and active bonds compared to closed bonds. This observation suggests that active bonds, which signify ongoing tenancies, hold greater relevance to current market conditions and exert a more substantial influence on rental pricing dynamics.
+
+For deeper insights into the relationship between rental prices and active bonds, please consult Appendix 3.9 for the North Island and Appendix 3.10 for the South Island. These appendices provide additional analysis and visualizations to further elucidate the connection between rental prices and active bonds across different regions.
+
+### Analytican Plan 
+
+he goal of this project is to analysis the trend in the rental housing market in New Zealand in pass 30 years, with a particular focus on changes in rental costs and housing affordability.
+
+The primary analysis proposed are: 
+
+- Time series analysis: This approach is appropriate for the data because to its temporal nature. By examining rental prices as a time series, we may find seasonal patterns, long-term trends, and possibly cyclical fluctuations. Models such as ARIMA can assist estimate future rental price changes based on previous data.In this section we will main focus on the Auckland region, for the rest of region data will be in Appendix4.1
+
+```{r}
+#conver to Date format
+auckland$time_frame <- as.Date(auckland$time_frame)
+#creates time series object
+ts_data <- ts(auckland$median_rent, frequency = 12)
+#decompposes time series into trend 
+decomp <- decompose(ts_data)
+```
+
+
+- Regression analysis: To determine the influence of various factors on rental pricing, regression models will be used. This method will allow us to measure the impact of factors like the number of active and closed bonds, district-specific economic conditions, and other important variables on median rental pricing.
+
+```{r}
+lm_model <- lm(median_rent ~ time_frame, data = auckland)
+latest_date <- max(auckland$time_frame)
+# Generate a sequence of 12 months starting from the latest date
+future_dates <- seq(latest_date, by = "1 month", length.out = 12)
+future_data <- data.frame(time_frame = future_dates)
+# predict valure of feature value refer to Appendix 4.2
+pred_val <- predict(lm_model, newdata = future_data,, interval = "prediction")
+```
+
+
+- Geospatial analysis will be utilized to examine regional variations in rental pricing, aiming to uncover patterns of price fluctuations and disparities across different locations. By integrating additional data on median income from Stats NZ, we'll construct a predictive model. This model will classify rental prices as affordable or unaffordable based on a threshold of 30% of median income. This approach enables us to identify areas experiencing rapid price changes and assess regional disparities in housing affordability effectively
+```{r}
+# Drop off row associate with region labeled ALL
+clean.df <- clean.df %>% 
+  mutate(year = lubridate::year(time_frame)) %>% 
+  filter(location != 'ALL')
+
+# Group by year and location, calculate median rental price for each group
+median_rent_by_year_region <- clean.df %>%
+  group_by(year, location) %>%
+  summarise(median_rent = median(median_rent, na.rm = TRUE), .groups = "drop")
+
+
+
+income1 <- income[, c('Quarter', 'Total')] %>% 
+  mutate(Quarter = as.Date(as.yearmon(Quarter, format = "%b-%y")),
+         Quarter = format(Quarter, "%Y"),
+         `names<-`(., c("year", "Salary")))
+
+merged_data <- merge(income1, median_rent_by_year_region, by = "year")
+
+merged_data <- merged_data %>% 
+ mutate(affordability_label =ifelse(median_rent / Salary > 0.30, "Un_affordable", "Affordable"))
+
+
+affordable_region <- merged_data %>% 
+                          filter(affordability_label =='Affordable')# Appendix 4.3
+
+un_aff_regin <- merged_data %>%  filter(affordability_label=='Un_affordable') # Appendix 4.3
+
+```
+
+In addition to housing quality, general economics and the influence of government policies are important aspects to consider while modeling. Because evaluating housing quality is difficult, economic indices such as the consumers price index(CPI) provide useful insights into larger economic patterns. By combining such indicators, we get a better understanding of how economic issues influence rental market dynamics.
+
+```{r}
+CPI <- janitor::clean_names(CPI)
+CPI <- CPI %>% select("period", "series_title_1", "data_value") %>%    filter(series_title_1 == "Housing and household utilities") %>%    
+    mutate(year = as.integer(substr(period, 1, 4))) %>% 
+     group_by(year) %>% 
+    summarise(average_value = mean(data_value, na.rm = TRUE))
+
+   
+backup <- rental.df %>%   mutate(year = lubridate::year(time_frame))
+merged_CPI  = merge(CPI, backup, by="year")
+
+reg_model <- lm(median_rent ~average_value + active_bonds + location, data = merged_CPI)# 4.
+```
+
+
+### Discussion 
+
+##### Strength:
+- Long-term data availability: This data collection spans more than 30 years, offering a comprehensive historical view on rental markets. 
+
+- Geographic Information: This data collection contains information on several regions of New Zealand/Aotearoa, allowing me to analyze data for regional rental costs.
+
+- Comprehensive Variables: The data set includes several variables related to rental pricing, bond activity, and time frames, offering a comprehensive perspective of the rental market.
+
+#### Limitations: 
+
+- Missing Data: Missing data, particularly in the location columns, may introduce bias or reduce the analysis's thoroughness. 
+
+- Scope of Variable: Even though the data set covers many factors related to the rental market, there may be some hidden factors that are not included, such as housing quality or demographic changes, which will have a substantial influence on the rental market but have not yet been recorded.
+
+
+Navigating the complexities of the property market shows a world full of subtleties and imbalances. However, our whole examine reveals a compelling narrative: a perceptible rise in growth over the last decade, contrasted with a somewhat more muted trend in the previous two decades. This insight emphasizes the market's dynamic nature, marked by swings and evolutionary movements. 
+ 
+###  Appendix
+
+##### Appendix 1.1 Data Source: 
+```{r}
+glimpse(rental.df)
+```
+
+#### Appendix 2.1 missing data 
+```{r}
+miss_count
+```
+#### appendix 2.2 
+```{r}
+glimpse(clean.df)
+summary(rental.df)
+```
+
+
+
+##### Appendix 3.1 Entire NZ propetery status:
+```{r}
+ggplot(clean.df, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(title="Relation between time frame and rental price",
+       x= "years",
+       y='prices')+
+      scale_color_manual(values = c('red','blue'),
+                         name = 'figure types',
+                         labels=c('Median', 'Geometric Mean'))
+```
+```{r, include=FALSE}
+north_island_cities <- c(
+  "Far North District",
+  "Whangarei District",
+  "Kaipara District",
+  "Thames-Coromandel District",
+  "Hauraki District",
+  "Waikato District",
+  "Matamata-Piako District",
+  "Hamilton City",
+  "Waipa District",
+  "South Waikato District",
+  "Waitomo District",
+  "Taupo District",
+  "Western Bay of Plenty District",
+  "Tauranga City",
+  "Rotorua District",
+  "Whakatane District",
+  "Kawerau District",
+  "Gisborne District",
+  "Wairoa District",
+  "Hastings District",
+  "Napier City",
+  "Central Hawke's Bay District",
+  "New Plymouth District",
+  "Stratford District",
+  "South Taranaki District",
+  "Ruapehu District",
+  "Whanganui District",
+  "Rangitikei District",
+  "Manawatu District",
+  "Palmerston North City",
+  "Tararua District",
+  "Horowhenua District",
+  "Kapiti Coast District",
+  "Porirua City",
+  "Upper Hutt City",
+  "Lower Hutt City",
+  "Wellington City",
+  "Masterton District",
+  "South Wairarapa District"
+)
+
+south_island_cities <- c(
+  "Tasman District",
+  "Nelson City",
+  "Marlborough District",
+  "Grey District",
+  "Westland District",
+  "Hurunui District",
+  "Waimakariri District",
+  "Christchurch City",
+  "Selwyn District",
+  "Ashburton District",
+  "Timaru District",
+  "Waitaki District",
+  "Central Otago District",
+  "Queenstown-Lakes District",
+  "Dunedin City",
+  "Clutha District",
+  "Southland District",
+  "Gore District",
+  "Invercargill City"
+)
+
+north_island_cities <- sort(north_island_cities)
+south_island_cities <- sort(south_island_cities)
+
+```
+
+##### Appendix 3.2 North island 
+
+```{r}
+# north island :
+north <- clean.df %>% filter(location %in% north_island_cities)
+ggplot(north, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')+theme_minimal()
+```
+##### Appendix 3.3 South island
+```{r}
+# south island:
+south <- clean.df %>%  filter(location %in% south_island_cities)
+ggplot(south, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices') + theme_minimal()
+# few major cites:
+```
+##### Appendix 3.4 Wellington
+```{r}
+# Wellington 
+wellington <- clean.df %>% filter(location == 'Wellington City')
+
+ggplot(wellington, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')
+```
+##### Appendix 3.5 Christchurch
+```{r}
+christchurch <- clean.df %>%  filter(location == 'Christchurch City')
+ggplot(christchurch, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')
+```
+##### Appendix 3.6 Hamilton 
+
+```{r}
+hamilton <- clean.df %>% filter(location == 'Hamilton City')
+ggplot(hamilton, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')
+```
+
+##### Appendix 3.7 North island 
+
+```{r}
+ggplot(north, aes(x = location)) + 
+  geom_boxplot(aes(y = median_rent, fill = "Median Rent"), alpha = 0.5) +
+  geom_boxplot(aes(y = geometric_mean_rent, fill = "Geometric Mean Rent"), alpha = 0.5) +
+  labs(title = "Boxplot of Rental Prices in Auckland",
+       x = "Location",
+       y = "Rent") +
+  scale_fill_manual(values = c("red", "blue"),
+                    name = "Rent Type",
+                    labels = c("Median Rent", "Geometric Mean Rent"))
+```
+
+##### Appendix 3.8 South Island
+```{r}
+ggplot(south, aes(x = location)) + 
+  geom_boxplot(aes(y = median_rent, fill = "Median Rent"), alpha = 0.5) +
+  geom_boxplot(aes(y = geometric_mean_rent, fill = "Geometric Mean Rent"), alpha = 0.5) +
+  labs(title = "Boxplot of Rental Prices in Auckland",
+       x = "Location",
+       y = "Rent") +
+  scale_fill_manual(values = c("red", "blue"),
+                    name = "Rent Type",
+                    labels = c("Median Rent", "Geometric Mean Rent"))
+```
+
+##### Appendix 3.9 North island 
+
+```{r}
+ggplot(north, aes(x = active_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Active Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+
+
+ggplot(north, aes(x = closed_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Closed Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+```
+
+##### Appendix 3.10 South island
+```{r}
+ggplot(south, aes(x = active_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Active Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+
+
+ggplot(south, aes(x = closed_bonds)) +
+  geom_point(aes(y = median_rent, color = 'Median Rent', group = location)) +
+  geom_point(aes(y = geometric_mean_rent, color = 'Geometric Mean Rent', group = location)) +
+  labs(title = "Relation between Closed Bonds and Rental Price",
+       x = "Active Bonds",
+       y = "Prices") +
+  scale_color_manual(values = c("red", "blue"),
+                     name = "Rent Type",
+                     labels = c("Median Rent", "Geometric Mean Rent"))
+
+```
+
+##### 4.1 Decompose 
+
+```{r}
+plot(decomp)
+```
+##### Appendix 4.2 Predictions
+```{r}
+pred_val_df <- data.frame(
+  Month = 1:12,
+  fit = pred_val[, 1],  # Extracting the fit values
+  lwr = pred_val[, 2],  # Extracting the lower bound
+  upr = pred_val[, 3]   # Extracting the upper bound
+)
+ggplot(pred_val_df, aes(x = Month)) +
+  geom_point(aes(y = fit), color = "blue") +
+  geom_line(aes(y = fit), color = "blue") +
+  labs(x = "Month", y = "Predicted Rental Prices") +
+  ggtitle("Predicted Rental Prices for the Next 12 Months")
+```
+
+#### Appendix 4.3 affordable region list
+```{r}
+print(affordable_region)
+```
+#### Appendix 4.4 un-affordable region list
+```{r}
+print(un_aff_regin)
+```
+##### Appendix 4.5  CPI regression
+```{r}
+summary(reg_model)
+coefplot(reg_model)
+```
