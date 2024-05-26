@@ -1,0 +1,276 @@
+---
+title: "Milestone 3"
+author: "Shuo Mao 437681258"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(reader)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(janitor)
+library(ggmap)
+library(leaflet)
+library(rnaturalearth)
+library(sf)          
+library(tmap)        
+library(spData)      
+library(geojsonio)  
+library(zoo)
+library(coefplot)
+income <- read_csv('/Users/vicmon/Downloads/median-weekly-earnings-from-wages-and-salaries-($),-by-sex,-june-quarters,-1998–2023.csv', show_col_types = FALSE)
+rental.df <- read_csv("/Users/vicmon/Downloads/detailed-monthly-february-2024-tla-tenancy.csv", show_col_types = FALSE)
+CPI <- read_csv('/Users/vicmon/Downloads/consumers-price-index-march-2024-quarter-index-numbers.csv', show_col_types = FALSE)
+population <- read_csv("/Users/vicmon/stat765/STATS765_UOA/annual_population_median.csv") 
+```
+
+
+### Goal 
+The objective of this project is to analysis the trends in rental housing market in New Zealand/Aotearoa over the pass 30 years, focusing on rental cost changes and housing afforability. 
+
+### Data Scource
+The major source of data is Tenancy Services, an open resource dataset offered by the New Zealand Ministry of Business. You can find it here[https://www.tenancy.govt.nz/about-tenancy-services/data-and-statistics/rental-bond-data/]. This dataset includes location, time frame, median rental price, bonds, and the log standard of rent price.
+
+I choose to focus on rental pricing trends in the North Island and Christchurch. The North Island houses the majority of New Zealand's population, whereas Christchurch has been hit by both natural catastrophes and terrorist acts. Hopefully, I can find a link between population increase and the influence of significant events on rental pricing.
+
+```{r}
+#tidy up column names Details will appear on Appendix 1.1 
+rental.df <- janitor::clean_names(rental.df)
+```
+
+### Data processing and Exploration 
+
+#### Tidy data frame
+The main form of data tidying required is to reduce the number of columuns. As seen below, there are initially 11
+attributes, some of which are not going to be of any use to me. So the first step is to remove many irrelevant columns and check if there are any missing values.
+
+```{r}
+length(names(rental.df))
+
+miss_count = colSums(is.na(rental.df))
+rows_with_missing <- which(!complete.cases(rental.df))
+missing_col <-rental.df[rows_with_missing, ]# appendix 2.1
+
+```
+```{r}
+# Columns that relate to our analysis
+relevant_columns <- c("location", "median_rent", "active_bonds", "time_frame", "closed_bonds","geometric_mean_rent")  
+clean.df <- rental.df %>%
+  select(all_of(relevant_columns))%>%
+  mutate(median_rent=replace_na(median_rent,median(median_rent, na.rm = TRUE)))  
+```
+From Appendix 2.1 there is missing value on columns location, so we need to find out does those missing value will effect our process or not. 
+After obverse the relation between rental price and time frame, we can consider it as a separate region
+
+At this stage, we interested  rental price trend in different regions over time and the relation between bonds and rental price, hence we can remove some of attributes that is not beneficial for us to analysis the relationship between bonds and rental price. For example duplicate data category, `Location_ID` and `Location`; also extra numbers such as `upper quartile rent` and `lower quartile rent`. Data detail will attend in appendix 2.2.
+
+####  Data Explorations 
+
+In this section, we will look at the rental market trend in North island region and christchruch in pass 30 years, also find the link of rental pricee and new zealand populations.
+
+#### Christchruch 
+```{r}
+christchurch <- clean.df %>%  filter(location == 'Christchurch City')
+ggplot(christchurch, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')
+
+```
+
+In the plot it illustrate the reation of relation of rental price and years, as we can see it have one turning point that the plotting line changes, which is around 2015, the trend start to decrease after 2020 it raise sharply again.
+onverall the relation between prices and years have sort of postive linear relationships.
+
+
+```{r}
+north <- clean.df %>% filter(location %in% north_island_cities) #appendix 2.3
+
+# time series plot of rental price 
+ggplot(north, aes(x = time_frame)) +
+  geom_line(aes(y = median_rent, group = location), color = 'red') +
+  geom_line(aes(y = geometric_mean_rent, group = location), color = 'blue')+
+  labs(tiele="Relation between time frame and rental price",
+       x= "years",
+       y='prices')+
+      scale_color_manual(values = c('red','blue'),
+                         name = 'figure types',
+                         labels=c('Median', 'Geometric Mean'))
+```
+The graph above depicts the trends in North island rental market over the last thirty years. It indicates a gradual increase in rental costs over decades, with a noticeable acceleration beginning in 2010. This increase of price rise reflects substantial market shifts in recent years. roughly from the plot the relation between years and price have sort of linear relationship, the price riase along with years. In addition it's worth ot view the relation plot of rental price and populaitons. 
+
+```{r}
+clean.df <- clean.df %>%  mutate(time_frame = str_sub(time_frame, 1,4)) %>% 
+  group_by(time_frame) %>% 
+  mutate(average_price = mean(median_rent, na.rm = TRUE))
+
+population <- population %>% mutate(
+  north_pop = population * 0.77
+)
+population$time_frame <- as.character(population$time_frame)
+clean.df <- left_join(clean.df, population, by = "time_frame")
+clean.df
+
+north <- clean.df %>% filter(location %in% north_island_cities)
+north
+ggplot(north, aes(x = north_pop)) +
+  geom_line(aes(y = average_price), color = 'red') +
+  labs(tiele="Relation between population and rental price",
+       x= "population",
+       y='prices')
+```
+
+In the plot, it illustrates the relationship between average rental price and populations, whereas initially population increases, price rise slowly, however,after the population reaches around 3,900,000, there is a steep increase price. 
+The graph suggests that there might be a positive correlation between population and prices. As the population grows, prices tend to increase more rapidly
+
+### Analytical plan
+
+#### Objective
+This primary objective of this analysis is to predict rental prices in New Zealand/Aotearoa based on historical trends. 
+
+
+### Implementation and results 
+
+```{r}
+library(car)
+pop_aver <- data.frame(
+   average_price = unique(north$average_price),
+   population = unique(north$population)
+)
+
+ppl_lm  <- lm(average_price ~ population , data = pop_aver)
+par(mfrow = c(2,2))
+plot(ppl_lm)
+qqPlot(ppl_lm[[2]])
+# using log 
+log_ppl_lm <- lm(log(average_price) ~ log(population), data = pop_aver)
+par(mfrow = c(2,2))
+qqPlot(log_ppl_lm[[2]])
+plot(log_ppl_lm)
+
+
+lm.quan <- lm(average_price ~ population+ I(population^2), data = pop_aver)
+par(mfrow = c(2,2))
+plot(lm.quan)
+qqPlot(lm.quan[[2]])
+
+
+
+```
+
+```{r}
+set.seed(123)
+data(north, package = "xgboost")
+
+```
+
+
+```{r}
+glimpse(north)
+
+lm <- lm(median_rent ~ active_bonds  , data = north)
+par(mfrow = c(2,2))
+plot(lm)
+
+qqPlot(lm[[2]])
+
+lm <- lm( log(median_rent) ~ log(active_bonds ) , data = north)
+par(mfrow = c(2,2))
+plot(lm)
+qqPlot(lm[[2]])
+
+
+
+lm.quan <- lm(median_rent ~ active_bonds+ I(active_bonds^2) , data = north)
+par(mfrow = c(2,2))
+plot(lm.quan)
+qqPlot(lm.quan[[2]])
+
+
+
+lm <- lm(  time_frame~ geometric_mean_rent, data = north)
+par(mfrow = c(2,2))
+plot(lm.quan)
+qqPlot(lm.quan[[2]])
+
+
+lm1 <- lm(log(geometric_mean_rent) ~ time_frame, data=north)
+par(mfrow = c(2,2))
+plot(lm.quan)
+qqPlot(lm.quan[[2]])
+
+
+lm_quan <- lm(time_frame ~ geometric_mean_rent + I(geometric_mean_rent^2), data = north)
+par(mfrow = c(2,2))
+plot(lm.quan)
+qqPlot(lm.quan[[2]])
+
+
+
+````
+
+### Appendix 
+
+```{r}
+# appendix 1.1
+glimpse(rental.df)
+
+# appendix 2.1 Missing values 
+miss_count
+
+
+# appendix 2.2 
+glimpse(clean.df)
+summary(rental.df)
+
+# appendix 2.3
+
+north_island_cities <- c(
+  "Far North District",
+  "Whangarei District",
+  "Kaipara District",
+  "Thames-Coromandel District",
+  "Hauraki District",
+  "Waikato District",
+  "Matamata-Piako District",
+  "Hamilton City",
+  "Waipa District",
+  "South Waikato District",
+  "Waitomo District",
+  "Taupo District",
+  "Western Bay of Plenty District",
+  "Tauranga City",
+  "Rotorua District",
+  "Whakatane District",
+  "Kawerau District",
+  "Gisborne District",
+  "Wairoa District",
+  "Hastings District",
+  "Napier City",
+  "Central Hawke's Bay District",
+  "New Plymouth District",
+  "Stratford District",
+  "South Taranaki District",
+  "Ruapehu District",
+  "Whanganui District",
+  "Rangitikei District",
+  "Manawatu District",
+  "Palmerston North City",
+  "Tararua District",
+  "Horowhenua District",
+  "Kapiti Coast District",
+  "Porirua City",
+  "Upper Hutt City",
+  "Lower Hutt City",
+  "Wellington City",
+  "Masterton District",
+  "South Wairarapa District"
+)
+north_island_cities <- sort(north_island_cities)
+```
+
